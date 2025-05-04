@@ -5,42 +5,10 @@ import typing as _tp
 
 import pydantic as _pyd
 import sqlalchemy as _sqla
+import sqlalchemy.types as _sqlt
 import sqlmodel as _sqlm
 
-_T = _tp.TypeVar("_T")
-_TDeco = _tp.TypeVar("_TDeco", bound=_sqla.TypeDecorator)
-
-
 UNDEFINED = object()
-
-
-def create_type_decorator(
-    clazz: _tp.Type[_T], length: int = 2048, key: str | None = None
-) -> _tp.Type[_sqla.TypeDecorator]:
-    class TypeDecorator(_sqla.TypeDecorator):
-        impl = _sqla.String(length)
-        python_type = clazz
-
-        def process_bind_param(self, value, dialect) -> str:
-            return str(value)
-
-        def process_result_value(self, value, dialect) -> _T:
-            if key:
-                return clazz(key=value)  # type: ignore[call-arg]
-
-            return clazz(value)  # type: ignore[call-arg]
-
-        def process_literal_param(self, value, dialect) -> str:
-            return str(value)
-
-    return TypeDecorator
-
-
-def create_typed_field(
-    clazz: _tp.Type[_T], *, length: int = 2048, key: str | None = None
-) -> _tp.Any:
-    decorator = create_type_decorator(clazz, length, key)
-    return _sqlm.Field(sa_type=decorator)
 
 
 def utc_now() -> _dt.datetime:
@@ -106,6 +74,40 @@ AwarePastDatetime = _tp.Annotated[
     _dt.datetime, _pyd.AfterValidator(is_timezone_aware_in_past)
 ]
 
-HTTP_URL_FIELD = create_typed_field(_pyd.HttpUrl, key="url")
 
-PURE_WINDOWS_PATH_FIELD = create_typed_field(_pl.PureWindowsPath)
+class HttpUrlTypeDecorator(_sqlt.TypeDecorator):
+    impl = _sqla.String(1024)
+    python_type = _pyd.HttpUrl
+
+    def process_bind_param(self, value, dialect) -> str:
+        return str(value)
+
+    def process_result_value(self, value, dialect) -> _pyd.HttpUrl:
+        return _pyd.HttpUrl(url=value)
+
+    def process_literal_param(self, value, dialect) -> str:
+        return str(value)
+
+
+HTTP_URL_FIELD = _sqlm.Field(
+    sa_type=HttpUrlTypeDecorator,  # sa_column_kwargs=dict(postgresql_length=1024)
+)
+
+
+class PureWindowsPathTypeDecorator(_sqla.TypeDecorator):
+    impl = _sqla.String(1024)
+    python_type = _pl.PureWindowsPath
+
+    def process_bind_param(self, value, dialect) -> str:
+        return str(value)
+
+    def process_result_value(self, value, dialect) -> _pl.PureWindowsPath:
+        return _pl.PureWindowsPath(value)
+
+    def process_literal_param(self, value, dialect) -> str:
+        return str(value)
+
+
+PURE_WINDOWS_PATH_FIELD = _sqlm.Field(
+    sa_type=PureWindowsPathTypeDecorator,  # sa_column_kwargs=dict(postgresql_length=1024)
+)

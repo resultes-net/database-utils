@@ -75,22 +75,30 @@ AwarePastDatetime = _tp.Annotated[
 ]
 
 
-class HttpUrlTypeDecorator(_sqlt.TypeDecorator):
+class NullableHttpUrlTypeDecorator(_sqlt.TypeDecorator):
     impl = _sqla.String(1024)
     python_type = _pyd.HttpUrl
 
-    def process_bind_param(self, value, dialect) -> str:
+    def process_bind_param(
+        self, value: _tp.Any | None, dialect: _sqla.Dialect
+    ) -> str | None:
+        if value is None:
+            return None
+
         return str(value)
 
-    def process_result_value(self, value, dialect) -> _pyd.HttpUrl:
+    def process_result_value(
+        self, value: _tp.Any | None, dialect: _sqla.Dialect
+    ) -> _pyd.HttpUrl | None:
+        if value is None:
+            return None
+
         return _pyd.HttpUrl(url=value)
-
-    def process_literal_param(self, value, dialect) -> str:
-        return str(value)
 
 
 HTTP_URL_FIELD = _sqlm.Field(
-    sa_type=HttpUrlTypeDecorator,  # sa_column_kwargs=dict(postgresql_length=1024)
+    sa_type=NullableHttpUrlTypeDecorator,
+    nullable=True,
 )
 
 
@@ -103,9 +111,6 @@ class PureWindowsPathTypeDecorator(_sqla.TypeDecorator):
 
     def process_result_value(self, value, dialect) -> _pl.PureWindowsPath:
         return _pl.PureWindowsPath(value)
-
-    def process_literal_param(self, value, dialect) -> str:
-        return str(value)
 
 
 PURE_WINDOWS_PATH_FIELD = _sqlm.Field(

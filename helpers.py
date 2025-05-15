@@ -20,7 +20,7 @@ def id_default_factory() -> str:
 
 
 def _create_id_field(**kwargs: _tp.Any) -> _tp.Any:
-    extra_kwargs = dict(max_length=16, unique=True)
+    extra_kwargs = dict(max_length=16)
 
     overridden_keys = [k for k in kwargs if k in extra_kwargs]
     if overridden_keys:
@@ -37,6 +37,7 @@ def create_id_field(
     default_factory: _tp.Callable[[], _tp.Any] | None = None,
     foreign_key: str | None = None,
     primary_key: bool = False,
+
 ) -> _tp.Any:
     if default is not UNDEFINED and default_factory is not None:
         raise ValueError("Mustn't specify both default value and default factory.")

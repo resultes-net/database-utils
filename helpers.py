@@ -1,18 +1,14 @@
-import datetime as _dt
 import pathlib as _pl
 import secrets as _sec
 import typing as _tp
 
 import pydantic as _pyd
+import resultes_pydantic_models.common as _pcom
 import sqlalchemy as _sqla
 import sqlalchemy.types as _sqlt
 import sqlmodel as _sqlm
 
 UNDEFINED = object()
-
-
-def utc_now() -> _dt.datetime:
-    return _dt.datetime.now(_dt.UTC)
 
 
 def id_default_factory() -> str:
@@ -37,7 +33,6 @@ def create_id_field(
     default_factory: _tp.Callable[[], _tp.Any] | None = None,
     foreign_key: str | None = None,
     primary_key: bool = False,
-
 ) -> _tp.Any:
     if default is not UNDEFINED and default_factory is not None:
         raise ValueError("Mustn't specify both default value and default factory.")
@@ -61,19 +56,7 @@ def create_id_field(
 
 ID_FIELD = create_id_field(default_factory=id_default_factory, primary_key=True)
 
-UTC_NOW_FIELD = _sqlm.Field(default_factory=utc_now)
-
-
-def is_timezone_aware_in_past(datetime: _dt.datetime) -> bool:
-    if datetime.tzinfo is None:
-        return False
-
-    return datetime <= utc_now()
-
-
-AwarePastDatetime = _tp.Annotated[
-    _dt.datetime, _pyd.AfterValidator(is_timezone_aware_in_past)
-]
+UTC_NOW_FIELD = _sqlm.Field(default_factory=_pcom.utc_now)
 
 
 class NullableHttpUrlTypeDecorator(_sqlt.TypeDecorator):

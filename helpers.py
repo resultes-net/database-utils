@@ -56,7 +56,18 @@ def create_id_field(
 
 ID_FIELD = create_id_field(default_factory=id_default_factory, primary_key=True)
 
-UTC_NOW_FIELD = _sqlm.Field(default_factory=_pcom.utc_now)
+
+def create_utc_now_field() -> _tp.Any:
+    return _sqlm.Field(
+        default_factory=_pcom.utc_now,
+        sa_column=_sqlm.Column(_sqlm.DateTime(timezone=True), nullable=False),
+    )
+
+
+def create_eager_relationship(back_populates: str) -> _tp.Any:
+    return _sqlm.Relationship(
+        back_populates=back_populates, sa_relationship_kwargs={"lazy": "selectin"}
+    )
 
 
 class NullableHttpUrlTypeDecorator(_sqlt.TypeDecorator):

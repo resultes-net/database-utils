@@ -5,8 +5,10 @@ import typing as _tp
 import pydantic as _pyd
 import resultes_pydantic_models.common as _pcom
 import sqlalchemy as _sqla
+import sqlalchemy.ext.asyncio.engine as _sqlae
 import sqlalchemy.types as _sqlt
 import sqlmodel as _sqlm
+import sqlmodel.ext.asyncio.session as _sqlmas
 
 UNDEFINED = object()
 
@@ -111,3 +113,7 @@ class PureWindowsPathTypeDecorator(_sqla.TypeDecorator):
 PURE_WINDOWS_PATH_FIELD = _sqlm.Field(
     sa_type=PureWindowsPathTypeDecorator,  # sa_column_kwargs=dict(postgresql_length=1024)
 )
+
+
+def create_session(engine: _sqlae.AsyncEngine) -> _sqlmas.AsyncSession:
+    return _sqlmas.AsyncSession(engine, expire_on_commit=False)

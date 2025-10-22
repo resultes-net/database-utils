@@ -1,3 +1,4 @@
+import collections.abc as _cabc
 import pathlib as _pl
 import secrets as _sec
 import typing as _tp
@@ -32,7 +33,7 @@ def _create_id_field(**kwargs: _tp.Any) -> _tp.Any:
 
 def create_id_field(
     default: _tp.Any = UNDEFINED,
-    default_factory: _tp.Callable[[], _tp.Any] | None = None,
+    default_factory: _cabc.Callable[[], _tp.Any] | None = None,
     foreign_key: str | None = None,
     primary_key: bool = False,
 ) -> _tp.Any:
@@ -48,7 +49,7 @@ def create_id_field(
         nullable=nullable,
     )
 
-    # SQLModels `UNDEFINED` isn't really part of its API making the `default` case a bit more complicated than the
+    # SQLModels' `UNDEFINED` isn't really part of its API making the `default` case a bit more complicated than the
     # `default_factory` case.
     if default is not UNDEFINED:
         return _create_id_field(default=default, **kwargs)

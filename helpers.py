@@ -18,24 +18,13 @@ def id_default_factory() -> str:
     return _sec.token_hex(nbytes=5)
 
 
-def _create_id_field(**kwargs: _tp.Any) -> _tp.Any:
-    extra_kwargs = dict(max_length=16)
-
-    overridden_keys = [k for k in kwargs if k in extra_kwargs]
-    if overridden_keys:
-        formatted_overridden_keys = ", ".join(overridden_keys)
-        raise ValueError(
-            f"You mustn't specify the following keys as they're overridden internally: {formatted_overridden_keys}."
-        )
-
-    return _sqlm.Field(**kwargs, **extra_kwargs)  # type: ignore[call-overload]
-
-
 def create_id_field(
     default: _tp.Any = UNDEFINED,
     default_factory: _cabc.Callable[[], _tp.Any] | None = None,
     foreign_key: str | None = None,
     primary_key: bool = False,
+    min_length: int = 1,
+    max_length: int = 16,
 ) -> _tp.Any:
     if default is not UNDEFINED and default_factory is not None:
         raise ValueError("Mustn't specify both default value and default factory.")
@@ -47,14 +36,16 @@ def create_id_field(
         foreign_key=foreign_key,
         primary_key=primary_key,
         nullable=nullable,
+        min_length=min_length,
+        max_length=max_length,
     )
 
     # SQLModels' `UNDEFINED` isn't really part of its API making the `default` case a bit more complicated than the
     # `default_factory` case.
     if default is not UNDEFINED:
-        return _create_id_field(default=default, **kwargs)
+        return _sqlm.Field(default=default, **kwargs)  # type: ignore[call-overload]
 
-    return _create_id_field(**kwargs)
+    return _sqlm.Field(**kwargs)  # type: ignore[call-overload]
 
 
 ID_FIELD = create_id_field(default_factory=id_default_factory, primary_key=True)
@@ -67,7 +58,7 @@ def create_utc_now_field() -> _tp.Any:
     )
 
 
-def create_eager_relationship(back_populates: str) -> _tp.Any:
+def create_eager_relationship(back_populates: str | None = None) -> _tp.Any:
     return _sqlm.Relationship(
         back_populates=back_populates, sa_relationship_kwargs={"lazy": "selectin"}
     )
